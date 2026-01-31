@@ -1,5 +1,5 @@
-import React from 'react';
 import Nav from './components/Nav';
+import Footer from './components/Footer';
 
 const Done = () => {
   return (
@@ -11,6 +11,8 @@ const Done = () => {
                 Attendance Submitted!
             </p>
         </div>
+
+        <Footer />
     </div>
   )
 }

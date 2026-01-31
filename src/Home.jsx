@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import Nav from './components/Nav';
 import Header from './components/Header';
 import axios from 'axios';
+import Footer from './components/Footer';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -30,24 +31,6 @@ const Home = () => {
       if (user !== null && schoolName !== null && lga !== null && staffTypeLocal !== null) {
           navigate("/Form");
       }
-      // const checkUser = async () => {
-      //     try {
-      //         const response = await axios.post(checkUserApi, JSON.stringify(user));
-      //         // console.log(response)
-      //         if (response.status === 200 && response.data.code === "sw321") {//active
-      //             navigate("/Form");
-      //         }
-      //         else if (response.status === 200 && response.data.code === "sw320") {//done
-      //             navigate("/Done");
-      //         }
-      //         else if (response.status === 200 && response.data.code === "sw322") {//pending
-      //             navigate("/Form");
-      //         }
-      //     } catch (err) {
-      //         console.log(err)
-      //     }
-      // }
-      // checkUser();
   }, [user, schoolName, lga, staffTypeLocal]);
 
   const whichDay = new Date().getDay();//to check if it's Monday (1)
@@ -281,6 +264,8 @@ const Home = () => {
           </div>
         }
       </div>
+
+      <Footer />
     </div>
   )
 }

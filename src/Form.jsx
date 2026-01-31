@@ -4,6 +4,7 @@ import Formheader from './components/Formheader';
 import axios from 'axios';
 import 'animate.css';
 import { useNavigate } from 'react-router';
+import Footer from './components/Footer';
 
 const Form = () => {
     const navigate = useNavigate();
@@ -580,6 +581,7 @@ const Form = () => {
                 :
                     ""
         }
+        <Footer />
     </div>
   )
 }

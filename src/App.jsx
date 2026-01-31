@@ -7,6 +7,7 @@
     import Header from './components/Header';
     import Formheader from './components/Formheader';
     import Done from './Done';
+    import Footer from './components/Footer';
 
     function App() {
       return (
@@ -17,6 +18,7 @@
           <Route path="/header" element={<Header />} />
           <Route path="/formheader" element={<Formheader />} />
           <Route path="/done" element={<Done />} />
+          <Route path="/footer" element={<Footer />} />
         </Routes>
       );
     }
