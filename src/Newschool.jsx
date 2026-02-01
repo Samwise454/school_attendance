@@ -11,8 +11,9 @@ const Newschool = () => {
     const [startLogin, setStartLogin] = useState(true);
     const [toggleLoader, setToggleLoader] = useState(false);
     const [toggleForm, setToggleForm] = useState("newform");//form not showing which means, it's not Monday
-    const [staffData, setStaffData] = useState([]);
+    const [attendanceData, setAttendanceData] = useState([]);
     const [staffType, setStaffType] = useState("");
+    const [allInput, setAllInput] = useState([]);
     const [uid, setUid] = useState({
         schlname: "",
         lga: "",
@@ -21,25 +22,50 @@ const Newschool = () => {
         numteacher: ""
     });
 
-    const [btnClass, setBtnClass] = useState('');
+    const [btnClass, setBtnClass] = useState("btn btn-success mt-6");
     const [btnNote, setBtnNote] = useState('Submit');
+    const [extraStaffName, setExtraStaffName] = useState("");
+    const [toggleTimer, setToggleTimer] = useState("");
+    const [timer, setTimer] = useState("");
 
     const checkSchool = "https://asubeb.esbatech.org/attendance/checkSchool.php";
+    const submitData = "https://asubeb.esbatech.org/attendance/submitAttendance.php";
 
-    // //let's check whether the schoolname provided is in the table, if yes, redirect to form
-    // useEffect(() => {
-    //     const checkUser = async () => {
-    //         try {
-    //             const response = await axios.post(checkSchool, JSON.stringify(tid));
-    //             if (response.status === 200) {
-                    
-    //             }
-    //         } catch (err) {
-    //             console.log(err)
-    //         }
-    //     }
-    //     checkUser();
-    // }, []);
+    useEffect(() => {
+        const updateMondayCountdown = () => {
+            const now = new Date();
+            const day = now.getDay(); // 1 = Monday
+            const hour = now.getHours();
+
+            // target 10:00 AM today
+            const target = new Date();
+            target.setHours(10, 0, 0, 0);//when done, set thus: target.setHours(10, 0, 0, 0)
+
+            const distance = target - now;
+
+            // Logic: Only run if it's Monday AND time is between 07:00:00 and 09:59:59
+            if (day !== 1) {// when done set thus: (day !== 1)
+                // setToggleLoader(false);
+                setToggleForm("inactive");
+            }
+            else if (day == 1 && hour >= 7 && hour < 10) {// when done set thus: (day == 1 && hour >= 7 && hour < 10)
+                const h = Math.floor(distance / (1000 * 60 * 60));
+                const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const s = Math.floor((distance % (1000 * 60)) / 1000);
+
+                let timeCount = `${h}h ${m}m ${s}s`;
+                setTimer(timeCount);
+
+                // setToggleLoader(false);
+                setToggleTimer("active");
+            } else {
+                // setToggleLoader(false);
+                setToggleTimer("closed");
+            }
+        }
+        
+        setInterval(updateMondayCountdown, 1000);
+    })
 
     const handleInput = (e) => {
         let id = e.target.id;
@@ -48,65 +74,211 @@ const Newschool = () => {
         setUid({...uid, [id]: val});
 
         if (id === "sttype") {
-        setStaffType(val);
+            setStaffType(val);
         }
     }
 
     const handleGetNewSchool = (e) => {
         e.preventDefault();
 
+        setStartLogin(false);
+        let btnnote = "";
+        let btnclasserror = "btn btn-secondary mt-6";
 
+        const handleBtn = (btnnote, btnclass) => {
+            setBtnNote(btnnote);
+            setBtnClass(btnclass);
+            setStartLogin(true);
+
+            setTimeout(() => {
+                setBtnClass("btn btn-success mt-6");
+                setBtnNote("Submit");
+            }, 3000);
+        }
+
+        if (uid.lga === "") {
+            btnnote = "Select LGA";
+            handleBtn(btnnote, btnclasserror);
+        }
+        else if (uid.sttype === "") {
+            btnnote = "Select staff type";
+            handleBtn(btnnote, btnclasserror);
+        }
+        else if (uid.sttype === "tutorial" && uid.sctype === "") {
+            btnnote = "Select school type";
+            handleBtn(btnnote, btnclasserror);
+        }
+        else if (uid.sttype === "tutorial" && uid.schlname === "") {
+            btnnote = "Type in school name";
+            handleBtn(btnnote, btnclasserror);
+        }
+        else if (uid.sttype === "nontutorial" && uid.schlname === "") {
+            btnnote = "Type in LGEA";
+            handleBtn(btnnote, btnclasserror);
+        }
+        else if (allInput === "") {
+            btnnote = "Type num staff";
+            handleBtn(btnnote, btnclasserror);
+        }
+        else if (allInput > 200) {
+            btnnote = "Invalid staff num";
+            handleBtn(btnnote, btnclasserror);
+        }
+        else {
+            //now we process
+            const checkUser = async () => {
+                try {
+                    const response = await axios.post(checkSchool, JSON.stringify(uid));
+                    // console.log(response.data)
+                    if (response.status === 200) {
+                        if (response.data.code === "sw321") {
+                            //if response.data.code =  sw321 this means school exists, redirect to form
+                            //after storing data in localstorage
+                            localStorage.setItem("asubebAttSchool", response.data.msg.schoolName);
+                            localStorage.setItem("asubebAttLga", response.data.msg.lga);
+                            localStorage.setItem("asubebAttStaffType", response.data.msg.staffType);
+                            localStorage.setItem("asubebTid", response.data.msg.tid);
+                            navigate("/Form");                            
+                        }
+                        else {
+                            //if response.data.code =  sw12 this means school doesn't exist
+                            //setToggleForm to "oldform"
+                            localStorage.setItem("asubebAttSchool", response.data.msg.schoolName);
+                            localStorage.setItem("asubebAttLga", response.data.msg.lga);
+                            localStorage.setItem("asubebAttStaffType", response.data.msg.staffType);
+                            localStorage.setItem("asubebTid", response.data.msg.tid);
+
+                            let dataArray = [];
+                            for (let i = 0; i < uid.numteacher; i++) {
+                                let inputData = "<section className='flex flex-row items-center justify-center w-full px-8'> <span className='mr-3'>${i}. </span><input type='text' placeholder='Surname Middlename Othername' className='input input-primary my-2' /></section>";
+                                dataArray.push(inputData);
+                            }
+                            setAllInput(dataArray);
+
+                            setToggleForm("oldform");
+                        }
+                        setStartLogin(true);
+                    }
+                } catch (err) {
+                    btnnote = "Error processing!";
+                    handleBtn(btnnote, btnclasserror);
+                }
+            }
+            checkUser();
+        }
+    }
+
+    const hideStaffBox = (box) => {
+        box.classList.add("animate__animated", "animate__fadeOut");
+        setTimeout(() => {
+            box.classList.add("hidden");
+        }, 800);
+    }
+
+    const markAttendance = (e) => {
+        let id = e.target.id;
+        let boxChecked = e.target.checked;
+        let val = e.target.value;
+
+        let idSplit = id.split("_");
+        let staffStatus = idSplit[0];
+        let idNum = idSplit[1];
+
+        let box = document.querySelector("#extraStaff_"+idNum);
+        let extraBox = document.querySelector("#extraBox_"+idNum);
+
+        if (staffStatus === "extraName" && val.length > 3) {
+            setExtraStaffName(val);
+            extraBox.classList.remove("hidden");
+        }
+        else if (staffStatus === "extraName" && val.length < 3) {
+            setExtraStaffName("");
+            extraBox.classList.add("hidden");
+        }
+        else {
+            if (boxChecked === true && staffStatus === "present") {
+                let allModalData = {
+                    staffType: staffType,
+                    lga: uid.lga,
+                    schoolName: uid.schlname,
+                    staffStatus: "present",
+                    staffName: extraStaffName,
+                    tid: localStorage.getItem("asubebTid"),
+                    action: "newschool"
+                }
+                setAttendanceData(prevSelected => [...prevSelected, allModalData]);
+                hideStaffBox(box);
+            }
+            else if (boxChecked === true && staffStatus === "leave") {
+                let allModalData = {
+                    staffType: staffType,
+                    lga: uid.lga,
+                    schoolName: uid.schlname,
+                    staffStatus: "leave",
+                    staffName: extraStaffName,
+                    tid: localStorage.getItem("asubebTid"),
+                    action: "newschool"
+                }
+                setAttendanceData(prevSelected => [...prevSelected, allModalData]);
+                hideStaffBox(box);
+            }
+
+            else if (boxChecked === true && staffStatus === "absent") {
+                let allModalData = {
+                    staffType: staffType,
+                    lga: uid.lga,
+                    schoolName: uid.schlname,
+                    staffStatus: "absent",
+                    staffName: extraStaffName,
+                    tid: localStorage.getItem("asubebTid"),
+                    action: "newschool"
+                }
+                setAttendanceData(prevSelected => [...prevSelected, allModalData]);
+                hideStaffBox(box);
+            }
+        }
     }
 
     const submitAttendance = (e) => {
         e.preventDefault();
         setStartLogin(false);
-        const handleBtn = (btnnote, btnclass) => {
+        // console.log(attendanceData)
 
+        let btnnote = "";
+        let btnclasserror = "btn btn-secondary mt-6";
+
+        const handleBtn = (btnnote, btnclass) => {
+            setBtnNote(btnnote);
+            setBtnClass(btnclass);
+            setStartLogin(true);
+
+            setTimeout(() => {
+                setBtnClass("btn btn-success mt-6");
+                setBtnNote("Submit");
+            }, 3000);
         }
 
-        // if (uid.lga === "") {
-        //     setStartLogin("lga"); 
-        //     setTimeout(() => {
-        //         setStartLogin("false");
-        //     }, 3000);
-        // }
-        // else if (uid.sttype === "") {
-        //     setStartLogin("sttype"); 
-        //     setTimeout(() => {
-        //         setStartLogin("false");
-        //     }, 3000);
-        // }
-        // else if (uid.sttype === "tutorial" && uid.sctype === "") {
-        //     setStartLogin("tut"); //for tutorial staff
-        //     setTimeout(() => {
-        //         setStartLogin("false");
-        //     }, 3000);
-        // }
-        // else if (uid.sttype === "tutorial" && uid.schlname === "") {
-        //     setStartLogin("schl"); //for tutorial staff
-        //     setTimeout(() => {
-        //         setStartLogin("false");
-        //     }, 3000);
-        // }
-        // else if (uid.sttype === "nontutorial" && uid.schlname === "") {
-        //     setStartLogin("schl2"); //for nontutorial staff
-        //     setTimeout(() => {
-        //         setStartLogin("false");
-        //     }, 3000);
-        // }
-        // else if (uid.numteacher === "") {
-        //     setStartLogin("staff"); 
-        //     setTimeout(() => {
-        //         setStartLogin("false");
-        //     }, 3000);
-        // }
-        // else if (uid.numteacher > 200) {
-        //     setStartLogin("numstaff"); //for nontutorial staff
-        //     setTimeout(() => {
-        //         setStartLogin("false");
-        //     }, 3000);
-        // }
+        if (attendanceData.length == 0) {
+            btnnote = "Enter at least one staff data!";
+            handleBtn(btnnote, btnclasserror);
+        }
+        else {
+            const sendData = async () => {
+                try {
+                    const response = await axios.post(submitData, JSON.stringify(attendanceData));
+                    // console.log(response.data);
+                    if (response.status === 200 && response.data.code === "sw321") {
+                        btnnote = "Submitted";
+                        handleBtn(btnnote, btnclasserror);
+                        navigate("/Done");
+                    }
+                } catch (err) {
+                    btnnote = "Error processing!";
+                    handleBtn(btnnote, btnclasserror);
+                }
+            }
+            sendData();
+        }
     }
 
   return (
@@ -172,11 +344,11 @@ const Newschool = () => {
                                     <option value="PM">Public Mission</option>
                                 </select>
 
-                                <input type="text" placeholder='School name' id='schlname' className="input input-primary mb-5" />
+                                <input type="text" placeholder='School name' onChange={handleInput} id='schlname' className="input input-primary mb-5" />
                             </div>
                         :
                             staffType === "nontutorial" ?
-                                <input type="text" placeholder='LGEA name' id='schlname' className="input input-primary mb-5" />
+                                <input type="text" placeholder='LGEA name' onChange={handleInput} id='schlname' className="input input-primary mb-5" />
                             :
                                 ""
                         }
@@ -185,7 +357,7 @@ const Newschool = () => {
 
                         <div className='flex pb-8'>
                             {startLogin == true ?
-                                <button className="btn btn-success mt-6">
+                                <button className={btnClass}>
                                     {btnNote}
                                 </button>
                             :
@@ -197,9 +369,80 @@ const Newschool = () => {
                         </div>
                     </form>
                 :
-                    <form action="#" className='text-sm mt-8 mx-10 flex flex-col items-center justify-center' onSubmit={submitAttendance}>
+                    toggleForm === "oldform" ?
+                        <form action="#" className='text-sm mt-8 mx-5 flex flex-col items-center justify-center' onSubmit={submitAttendance}>
+                            <section className='text-center text-pink-700 font-semibold mb-8'>
+                                {toggleTimer === "closed" || toggleTimer === "inactive" ?
+                                    <div>
+                                        <p className='text-sm animate__animated animate__bounceIn'>Attendance Closed</p>
+                                    </div>
+                                :
+                                    <div>
+                                        <p className='text-sm text-green-700'>Attendance stops in</p>
+                                        {timer}
+                                    </div>
+                                }
+                            </section>
 
-                    </form>
+                            <p className='text-sm px-4 mt-1 mb-2'>
+                                Carefully type in staff name and indicate whether 
+                                <i className='font-semibold'> present, absent</i> or on <i className='font-semibold'>leave</i>.
+                            </p>
+                            {allInput ?
+                                allInput.map((data, dataIndex) => {
+                                    return (
+                                        <section key={dataIndex} id={"extraStaff_"+dataIndex} className='w-full px-8'> 
+                                            <section className='flex flex-row items-center justify-center'>
+                                                <span className='mr-3'>{dataIndex + 1}. </span>
+                                                <input type='text' onChange={markAttendance} id={"extraName_"+dataIndex} placeholder='Surname Middlename Othername' className='input input-primary my-2' />
+                                            </section>
+
+                                            <section id={"extraBox_"+dataIndex} className='text-center mb-3 hidden'>
+                                                <span className='text-green-600 text-[13px] mr-1'>Present</span>
+                                                <input type="checkbox" onChange={markAttendance} id={"present_"+dataIndex} className="checkbox checkbox-success checkbox-lg" />
+
+                                                <span className='text-purple-600 text-[13px] mr-1 ml-2'>On Leave </span>
+                                                <input type="checkbox" onChange={markAttendance} id={"leave_"+dataIndex} className="checkbox checkbox-primary checkbox-lg mr-2" />
+
+                                                <span className='text-pink-600 text-[13px] mr-1'>Absent </span>
+                                                <input type="checkbox" onChange={markAttendance} id={"absent_"+dataIndex} className="checkbox checkbox-secondary checkbox-lg" />
+                                            </section>
+                                        </section>
+                                    )
+                                })
+                            :
+                                ""
+                            }
+
+                            <div className='flex pb-15'>
+                                {startLogin == true ?
+                                    <button className={btnClass}>
+                                        {btnNote}
+                                    </button>
+                                :
+                                    <button className="btn btn-success mt-6">
+                                        <span className="loading loading-spinner"></span>
+                                        Processing...
+                                    </button>
+                                }
+                            </div>
+                        </form>
+                    :
+                        toggleForm === "closed" ?
+                            <div className='shadow-sm p-10 py-20 rounded-sm font-semibold bg-gray-100 m-2 mt-10 flex items-center justify-center'>
+                                <p className='animate__animated animate__bounceIn'>
+                                    Form closed for today!
+                                </p>
+                            </div>
+                        :
+                            toggleForm === "inactive" ?
+                                <div className='shadow-sm p-10 py-20 rounded-sm font-semibold bg-gray-100 m-2 mt-10 flex items-center justify-center'>
+                                    <p className='animate__animated animate__bounceIn'>
+                                        Check Back on Monday!
+                                    </p>
+                                </div>
+                            :
+                                ""
                 }
             </div>
         <Footer />

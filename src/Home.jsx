@@ -27,14 +27,14 @@ const Home = () => {
   const [lga, setLga] = useState(localStorage.getItem("asubebAttLga"));
   const [staffTypeLocal, setStaffTypeLocal] = useState(localStorage.getItem("asubebAttStaffType"));
 
-  //!UN-COMMENT THIS CODE LATER
+  //!UN-COMMENT THIS CODE BY 12 NOON TOMORROW
   // useEffect(() => {
   //     if (user !== null && schoolName !== null && lga !== null && staffTypeLocal !== null) {
   //         navigate("/Form");
   //     }
   // }, [user, schoolName, lga, staffTypeLocal]);
 
-  //! TEMPORARILY CLEANING LOCALSTORAGE remove later
+  //! TEMPORARILY CLEANING LOCALSTORAGE [ REMOVE BY 12 NOON TOMORROW ]
   useEffect(() => {
     localStorage.removeItem("asubebTid");
     localStorage.removeItem("asubebAttSchool");
@@ -53,11 +53,11 @@ const Home = () => {
     }
   }, [whichDay]);
 
-  //this code below should redirect user to the main site
-  // useEffect(() => {
-  //   const mainSite = "https://asubeb.esbatech.org";
-  //   window.location.href = mainSite;
-  // }), [];
+  //! this code below should redirect user to the main site
+  useEffect(() => {
+    const mainSite = "https://asubeb.esbatech.org";
+    window.location.href = mainSite;
+  }), [];
 
   useEffect(() => {
     //this fetches schools matching selected lga 

@@ -93,16 +93,16 @@ const Form = () => {
 
             // target 10:00 AM today
             const target = new Date();
-            target.setHours(18, 0, 0, 0);//when done, set thus: target.setHours(10, 0, 0, 0)
+            target.setHours(10, 0, 0, 0);//when done, set thus: target.setHours(10, 0, 0, 0)
 
             const distance = target - now;
 
             // Logic: Only run if it's Monday AND time is between 07:00:00 and 09:59:59
-            if (day !== 0) {// when done set thus: (day !== 1)
+            if (day !== 1) {// when done set thus: (day !== 1)
                 setToggleLoader(false);
                 setToggleForm("inactive");
             }
-            else if (day == 0 && hour >= 7 && hour < 18) {// when done set thus: (day == 1 && hour >= 7 && hour < 10)
+            else if (day == 1 && hour >= 7 && hour < 10) {// when done set thus: (day == 1 && hour >= 7 && hour < 10)
                 const h = Math.floor(distance / (1000 * 60 * 60));
                 const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
                 const s = Math.floor((distance % (1000 * 60)) / 1000);
@@ -480,7 +480,7 @@ const Form = () => {
                         <p className='text-sm px-4 mt-5 mb-2'>
                             Carefully type in staff name that is not 
                             displayed and indicate whether 
-                            <i className='font-semibold'> present</i> or on <i className='font-semibold'>leave</i>.
+                            <i className='font-semibold'> present, absent</i> or on <i className='font-semibold'>leave</i>.
                         </p>
 
                         <div id='staffInputDiv' className='flex flex-col items-center justify-center relative'>
