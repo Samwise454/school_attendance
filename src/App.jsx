@@ -8,6 +8,7 @@
     import Formheader from './components/Formheader';
     import Done from './Done';
     import Footer from './components/Footer';
+    import Newschool from './Newschool';
 
     function App() {
       return (
@@ -18,6 +19,7 @@
           <Route path="/header" element={<Header />} />
           <Route path="/formheader" element={<Formheader />} />
           <Route path="/done" element={<Done />} />
+          <Route path="/newschool" element={<Newschool />} />
           <Route path="/footer" element={<Footer />} />
         </Routes>
       );

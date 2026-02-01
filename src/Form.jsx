@@ -1,4 +1,4 @@
-import React, { useState, useEffect, use } from 'react';
+import React, { useState, useEffect } from 'react';
 import Nav from './components/Nav';
 import Formheader from './components/Formheader';
 import axios from 'axios';
@@ -8,7 +8,6 @@ import Footer from './components/Footer';
 
 const Form = () => {
     const navigate = useNavigate();
-    const [oldLogin, setOldLogin] = useState("check");
     const [startLogin, setStartLogin] = useState("false");
     const [toggleForm, setToggleForm] = useState("active");//form not showing which means, it's not Monday
     const [toggleLoader, setToggleLoader] = useState(true);

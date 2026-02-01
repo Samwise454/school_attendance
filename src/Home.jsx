@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, Link } from 'react-router';
 import Nav from './components/Nav';
 import Header from './components/Header';
 import axios from 'axios';
@@ -21,28 +21,43 @@ const Home = () => {
   });
   const [staffType, setStaffType] = useState("");
 
-  const [user, setUser] = useState(localStorage.getItem("asubebTid"));
   // const checkUserApi = "https://asubeb.esbatech.org/attendance/checkUser.php";
+  const [user, setUser] = useState(localStorage.getItem("asubebTid"));
   const [schoolName, setSchoolName] = useState(localStorage.getItem("asubebAttSchool"));
   const [lga, setLga] = useState(localStorage.getItem("asubebAttLga"));
   const [staffTypeLocal, setStaffTypeLocal] = useState(localStorage.getItem("asubebAttStaffType"));
 
+  //!UN-COMMENT THIS CODE LATER
+  // useEffect(() => {
+  //     if (user !== null && schoolName !== null && lga !== null && staffTypeLocal !== null) {
+  //         navigate("/Form");
+  //     }
+  // }, [user, schoolName, lga, staffTypeLocal]);
+
+  // TEMPORARILY CLEANING LOCALSTORAGE
   useEffect(() => {
-      if (user !== null && schoolName !== null && lga !== null && staffTypeLocal !== null) {
-          navigate("/Form");
-      }
-  }, [user, schoolName, lga, staffTypeLocal]);
+    localStorage.removeItem("asubebTid");
+    localStorage.removeItem("asubebAttSchool");
+    localStorage.removeItem("asubebAttLga");
+    localStorage.removeItem("asubebAttStaffType");
+  }, [navigate]);
 
   const whichDay = new Date().getDay();//to check if it's Monday (1)
 
   useEffect(() => {
-    if (whichDay === 1) {
+    if (whichDay === 0) {
       setToggleForm(true);
     }
     else {
       setToggleForm(false);
     }
   }, [whichDay]);
+
+  //this code below should redirect user to the main site
+  // useEffect(() => {
+  //   const mainSite = "https://asubeb.esbatech.org";
+  //   window.location.href = mainSite;
+  // }), [];
 
   useEffect(() => {
     //this fetches schools matching selected lga 
@@ -252,7 +267,7 @@ const Home = () => {
 
             <input type="number" id='numteacher' placeholder="Number of staff" onChange={handleInput} className="input input-primary mb-2" />
 
-            <div className="flex pb-30">
+            <div className="flex pb-8">
               {startLogin == "false" ?
                 <button className="btn btn-success mt-6">
                   Login
@@ -261,7 +276,7 @@ const Home = () => {
                 startLogin == "true" ?
                   <button className="btn btn-success mt-6">
                     <span className="loading loading-spinner"></span>
-                    Logging In...
+                    Pocessing...
                   </button>
                 :
                   startLogin == "lga" ?
@@ -308,6 +323,18 @@ const Home = () => {
                           Login
                         </button>
               }
+            </div>
+
+            <div className='pb-10 flex flex-row items-center justify-center'>
+              <p>
+                For
+                <Link to={"/Newschool"}>
+                  <button className="btn btn-primary mx-2">
+                    New Schools?
+                  </button>
+                </Link>
+                not on the list
+              </p>
             </div>
           </form>
         :
