@@ -93,12 +93,12 @@ const Form = () => {
 
             // target 10:00 AM today
             const target = new Date();
-            target.setHours(24, 0, 0, 0);//increase attendance closure from here
+            target.setHours(1, 0, 0, 0);//increase attendance closure from here
 
             const distance = target - now;
 
             // Logic: Only run if it's Monday AND time is between 07:00:00 and 09:59:59
-            if (day === 6 && hour >= 7 && hour < 24) {//to extend timer, change the hour check value
+            if (day >= 6 && hour >= 7 && hour < 24) {//to extend timer, change the hour check value
                 const h = Math.floor(distance / (1000 * 60 * 60));
                 const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
                 const s = Math.floor((distance % (1000 * 60)) / 1000);

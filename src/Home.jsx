@@ -88,14 +88,44 @@ const Home = () => {
   const handleLogin = (e) => {
     e.preventDefault();
 
-    if (uid.lga === "" || uid.numteacher === "") {
-      setStartLogin("lga_staff"); 
+    if (uid.lga === "") {
+      setStartLogin("lga"); 
+      setTimeout(() => {
+        setStartLogin("false");
+      }, 3000);
+    }
+    else if (uid.sttype === "") {
+      setStartLogin("sttype"); 
       setTimeout(() => {
         setStartLogin("false");
       }, 3000);
     }
     else if (uid.sttype === "tutorial" && uid.sctype === "") {
       setStartLogin("tut"); //for tutorial staff
+      setTimeout(() => {
+        setStartLogin("false");
+      }, 3000);
+    }
+    else if (uid.sttype === "tutorial" && uid.schlname === "") {
+      setStartLogin("schl"); //for tutorial staff
+      setTimeout(() => {
+        setStartLogin("false");
+      }, 3000);
+    }
+    else if (uid.sttype === "nontutorial" && uid.schlname === "") {
+      setStartLogin("schl2"); //for nontutorial staff
+      setTimeout(() => {
+        setStartLogin("false");
+      }, 3000);
+    }
+    else if (uid.numteacher === "") {
+      setStartLogin("staff"); 
+      setTimeout(() => {
+        setStartLogin("false");
+      }, 3000);
+    }
+    else if (uid.numteacher > 200) {
+      setStartLogin("numstaff"); //for nontutorial staff
       setTimeout(() => {
         setStartLogin("false");
       }, 3000);
@@ -235,24 +265,49 @@ const Home = () => {
                     Logging In...
                   </button>
                 :
-                  startLogin == "lga_staff" ?
+                  startLogin == "lga" ?
                     <button className="btn btn-secondary mt-6">
-                      Select Lga and N0 of Staff
+                      Select Lga
                     </button>
                   :
-                    startLogin == "tut" ?
+                  startLogin == "staff" ?
+                    <button className="btn btn-secondary mt-6">
+                      Enter staff number!
+                    </button>
+                  :
+                  startLogin == "sttype" ?
+                    <button className="btn btn-secondary mt-6">
+                      Select staff type!
+                    </button>
+                  :
+                    startLogin == "schl" ?
                       <button className="btn btn-secondary mt-6">
-                        Select school type
+                        Select School
                       </button>
                     :
-                      startLogin == "error" ?
+                    startLogin == "schl2" ?
+                      <button className="btn btn-secondary mt-6">
+                        Select LGEA
+                      </button>
+                    :
+                      startLogin == "tut" ?
                         <button className="btn btn-secondary mt-6">
-                          Error Processing
+                          Select school type
                         </button>
                       :
-                      <button className="btn btn-success mt-6">
-                        Login
-                      </button>
+                      startLogin == "numstaff" ?
+                        <button className="btn btn-secondary mt-6">
+                          Invalid Staff Number!
+                        </button>
+                      :
+                        startLogin == "error" ?
+                          <button className="btn btn-secondary mt-6">
+                            Error Processing
+                          </button>
+                        :
+                        <button className="btn btn-success mt-6">
+                          Login
+                        </button>
               }
             </div>
           </form>
