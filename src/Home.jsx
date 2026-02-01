@@ -34,7 +34,7 @@ const Home = () => {
   //     }
   // }, [user, schoolName, lga, staffTypeLocal]);
 
-  // TEMPORARILY CLEANING LOCALSTORAGE
+  //! TEMPORARILY CLEANING LOCALSTORAGE remove later
   useEffect(() => {
     localStorage.removeItem("asubebTid");
     localStorage.removeItem("asubebAttSchool");

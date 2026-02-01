@@ -93,16 +93,16 @@ const Form = () => {
 
             // target 10:00 AM today
             const target = new Date();
-            target.setHours(10, 0, 0, 0);//when done, set thus: target.setHours(10, 0, 0, 0)
+            target.setHours(18, 0, 0, 0);//when done, set thus: target.setHours(10, 0, 0, 0)
 
             const distance = target - now;
 
             // Logic: Only run if it's Monday AND time is between 07:00:00 and 09:59:59
-            if (day !== 1) {// when done set thus: (day !== 1)
+            if (day !== 0) {// when done set thus: (day !== 1)
                 setToggleLoader(false);
                 setToggleForm("inactive");
             }
-            else if (day == 1 && hour >= 7 && hour < 10) {// when done set thus: (day == 1 && hour >= 7 && hour < 10)
+            else if (day == 0 && hour >= 7 && hour < 18) {// when done set thus: (day == 1 && hour >= 7 && hour < 10)
                 const h = Math.floor(distance / (1000 * 60 * 60));
                 const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
                 const s = Math.floor((distance % (1000 * 60)) / 1000);
