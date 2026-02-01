@@ -11,7 +11,7 @@ const Home = () => {
   const fetchSchool = "https://asubeb.esbatech.org/attendance/fetchSchool.php";
   const [schoolData, setSchoolData] = useState([]);
   const [startLogin, setStartLogin] = useState("false");
-  const [toggleForm, setToggleForm] = useState(true);//form not showing which means, it's not Monday
+  const [toggleForm, setToggleForm] = useState(false);//form not showing which means, it's not Monday
   const [uid, setUid] = useState({
     schlname: "",
     lga: "",
@@ -22,7 +22,7 @@ const Home = () => {
   const [staffType, setStaffType] = useState("");
 
   const [user, setUser] = useState(localStorage.getItem("asubebTid"));
-  const checkUserApi = "https://asubeb.esbatech.org/attendance/checkUser.php";
+  // const checkUserApi = "https://asubeb.esbatech.org/attendance/checkUser.php";
   const [schoolName, setSchoolName] = useState(localStorage.getItem("asubebAttSchool"));
   const [lga, setLga] = useState(localStorage.getItem("asubebAttLga"));
   const [staffTypeLocal, setStaffTypeLocal] = useState(localStorage.getItem("asubebAttStaffType"));
@@ -35,14 +35,14 @@ const Home = () => {
 
   const whichDay = new Date().getDay();//to check if it's Monday (1)
 
-  // useEffect(() => {
-  //   if (whichDay === 1) {
-  //     setToggleForm(true);
-  //   }
-  //   else {
-  //     setToggleForm(false);
-  //   }
-  // }, [whichDay]);
+  useEffect(() => {
+    if (whichDay === 1) {
+      setToggleForm(true);
+    }
+    else {
+      setToggleForm(false);
+    }
+  }, [whichDay]);
 
   useEffect(() => {
     //this fetches schools matching selected lga 
@@ -162,11 +162,10 @@ const Home = () => {
   }
 
   return (
-    <div>
+    <div className='flex flex-col min-h-screen'>
       <Nav/>
 
-      <div className='relative'>
-        
+      <div className='relative grow'>
         <section className='flex'>
           <img src="logo1.jpeg" alt="Image" className='w-20 h-auto ml-5 mt-5 mb-5 rounded-full shadow-sm'/> 
           <aside className='mt-10'>
@@ -302,7 +301,7 @@ const Home = () => {
                       :
                         startLogin == "error" ?
                           <button className="btn btn-secondary mt-6">
-                            Error Processing
+                            No Access!!
                           </button>
                         :
                         <button className="btn btn-success mt-6">
@@ -313,8 +312,10 @@ const Home = () => {
           </form>
         :
           <div className='shadow-sm p-10 py-20 rounded-sm font-semibold bg-gray-100 m-2 mt-10 flex items-center justify-center'>
-            <p className='animate__animated animate__bounceIn'>
+            <p className='animate__animated animate__bounceIn text-center'>
               Check Back on Monday!
+              {/* <br />
+              <span className='text-blue-600 leading-10'>7am - 10am</span> */}
             </p>
           </div>
         }
