@@ -8,13 +8,14 @@ import Footer from './components/Footer';
 
 const Form = () => {
     const navigate = useNavigate();
-    const [startLogin, setStartLogin] = useState("false");
-    const [toggleForm, setToggleForm] = useState("active");//form not showing which means, it's not Monday
+    // const [startLogin, setStartLogin] = useState("false");//!For old form
+    const [toggleForm, setToggleForm] = useState("wiper");//form should be active, closed or inactive for old form and wiper for new form 
     const [toggleLoader, setToggleLoader] = useState(true);
     const [staffData, setStaffData] = useState([]);
     const getStaff = "https://asubeb.esbatech.org/attendance/getStaff.php";
     const fetchSchool = "https://asubeb.esbatech.org/attendance/fetchSchool.php";
-    const submitData = "https://asubeb.esbatech.org/attendance/submitAttendance.php";
+    const submitData = "https://asubeb.esbatech.org/attendance/submitAttendance.php";//old form
+    const submitWiperData = "https://asubeb.esbatech.org/attendance/submitWiperAttendance.php";//!wiper form
     const checkUserApi = "https://asubeb.esbatech.org/attendance/checkUser.php";
     const [schoolData, setSchoolData] = useState({
         schoolName: localStorage.getItem("asubebAttSchool"),
@@ -47,6 +48,27 @@ const Form = () => {
     });
 
     const [extraStaffName, setExtraStaffName] = useState("");
+
+
+    /*  WIPER DATA FROM HERE */
+    
+    const [dutyPost, setDutyPost] = useState(localStorage.getItem("wiperPost"));
+    const [staffName, setStaffName] = useState(localStorage.getItem("wiperStaff"));
+    const [wiperNum, setWiperNum] = useState(localStorage.getItem("wiperNum"));
+    const [wiperAtt, setWiperAtt] = useState(localStorage.getItem("wiperAtt"));//eg present, leave, absent or null
+
+    const [wiperData, setWiperData] = useState({
+        wiperNum: "",
+        attStatus: ""
+    })
+    const [startLogin, setStartLogin] = useState(false);//old data is "false"//!for new form
+    const [btnClass, setBtnClass] = useState("btn btn-success mt-6");//new update
+    const [btnNote, setBtnNote] = useState('Submit');
+    const [toggleSubmitModal, setToggleSubmitModal] = useState(false);
+    const [animateModal, setAnimateModal] = useState('flex flex-col items-center justify-center');
+    const [attId, setAttId] = useState(localStorage.getItem('attId'));//userId stored for the sake of counting number of times attendance was submitted
+
+    /* WIPER DATA ENDS HERE */
     
     //let's fetch matching teacher's names
     useEffect(() => {
@@ -66,10 +88,10 @@ const Form = () => {
                 //     navigate("/Form");
                 // }
             } catch (err) {
-                console.log(err)
+                // console.log(err)
             }
         }
-        checkUser();
+        //! checkUser(); OLD CODE [uncomment when needed]
 
         const getStaffData = async () => {
             try {
@@ -84,8 +106,18 @@ const Form = () => {
             }
         }
 
-        getStaffData();
+        if (wiperAtt !== "no") {
+            navigate("/Done");
+        }
+        else if (wiperNum === null || wiperNum.length == 0) {
+            navigate("/");
+        }
 
+        //! getStaffData(); OLD CODE [uncomment when needed]
+
+        //!WIPER DATA
+
+        //!CODE TOUCHED
         const updateMondayCountdown = () => {
             const now = new Date();
             const day = now.getDay(); // 1 = Monday
@@ -96,13 +128,10 @@ const Form = () => {
             target.setHours(10, 0, 0, 0);//when done, set thus: target.setHours(10, 0, 0, 0)
 
             const distance = target - now;
+            const distance2 = target.setHours(12, 0, 0, 0)//for afternoon school
 
             // Logic: Only run if it's Monday AND time is between 07:00:00 and 09:59:59
-            if (day !== 1) {// when done set thus: (day !== 1)
-                setToggleLoader(false);
-                setToggleForm("inactive");
-            }
-            else if (day == 1 && hour >= 7 && hour < 10) {// when done set thus: (day == 1 && hour >= 7 && hour < 10)
+            if (day == 1 && hour >= 7 && hour < 10) {//when done set thus: (day == 1 && hour >= 7 && hour < 10)
                 const h = Math.floor(distance / (1000 * 60 * 60));
                 const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
                 const s = Math.floor((distance % (1000 * 60)) / 1000);
@@ -111,8 +140,26 @@ const Form = () => {
                 setTimer(timeCount);
 
                 setToggleLoader(false);
-                setToggleForm("active");
-            } else {
+                // setToggleForm("active");//!old form
+                setToggleForm("wiper"); //!new form with wiper number
+            }
+            else if (day == 1 && hour >= 10 && hour <= 12) {//this allows afternoon school user submit between 10am and 12
+                const h = Math.floor(distance2 / (1000 * 60 * 60));
+                const m = Math.floor((distance2 % (1000 * 60 * 60)) / (1000 * 60));
+                const s = Math.floor((distance2 % (1000 * 60)) / 1000);
+
+                let timeCount = `${h}h ${m}m ${s}s`;
+                setTimer(timeCount);
+
+                setToggleLoader(false);
+                // setToggleForm("active");//!old form
+                setToggleForm("wiper"); //!new form with wiper number
+            } 
+            else if (day !== 1) {
+                setToggleLoader(false);
+                setToggleForm("inactive");
+            }
+            else {
                 setToggleLoader(false);
                 setToggleForm("closed");
             }
@@ -330,9 +377,9 @@ const Form = () => {
             setButton("empty");
         }
         else {
-            const sendData = async () => {
+            const sendData = async (allData) => {
                 try {
-                    const response = await axios.post(submitData, JSON.stringify(attendanceData));
+                    const response = await axios.post(submitData, JSON.stringify(allData));
                     // console.log(response.data);
                     if (response.status === 200 && response.data.code === "sw321") {
                         setButton("done");
@@ -342,8 +389,286 @@ const Form = () => {
                     setButton("error");
                 }
             }
-            sendData();
+
+            let locationData = {
+                lat: "",
+                long: ""
+            };
+
+            let allData = {
+                attendance: "",
+                location: ""
+            }
+
+            //!before you allow to send data, trigger location
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        // Success!
+                        locationData = {
+                            lat: position.coords.latitude,
+                            long: position.coords.longitude
+                        }
+
+                        allData = {
+                            attendance: attendanceData,
+                            location: locationData
+                        }
+                            // console.log(allData);
+                        sendData(allData);
+                    },
+                    (error) => {
+                        // User denied permission or other error
+                        // console.error("Error Code:", error.code, "Message:", error.message);
+
+                        // setButton("noloc");//! COMMENT THIS OUT WHEN COMPLAINT IS HIGH
+
+                        locationData = {
+                            lat: "-",
+                            long: "-"
+                        }
+
+                        allData = {
+                            attendance: attendanceData,
+                            location: locationData
+                        }
+
+                        sendData(allData);//!IF USERS COMPLAIN SWITCH ON GPS TOO MUCH, UNCOMMENT THIS
+                    }
+                );
+            } 
+            else {
+                //no browser support or other errors, therefore allow submission
+                locationData = {
+                    lat: "-",
+                    long: "-"
+                }
+
+                allData = {
+                    attendance: attendanceData,
+                    location: locationData
+                }
+
+                sendData(allData);
+            }
+            
+            // sendData();
         }
+    }
+
+    /* Wiper functions below */
+    const markAttendanceWiper = (e) => {
+        let attStat = e.target.id;
+        let present = document.querySelector("#present");
+        let leave = document.querySelector("#leave");
+
+        switch(attStat) {
+            case 'present':
+                if (leave.checked) {
+                    leave.checked = false;
+                }
+                else if (present.checked) {
+                    setWiperData({
+                        wiperNum: wiperNum,
+                        attStatus: attStat
+                    });
+                }
+                else {
+                    setWiperData({
+                        wiperNum: wiperNum,
+                        attStatus: ""
+                    });
+                }
+                break;
+            case 'leave':
+                if (present.checked) {
+                    present.checked = false;
+                }
+                else if (leave.checked) {
+                    setWiperData({
+                        wiperNum: wiperNum,
+                        attStatus: attStat
+                    });
+                }
+                else {
+                    setWiperData({
+                        wiperNum: wiperNum,
+                        attStatus: ""
+                    });
+                }
+                break;
+        }
+    }
+
+    const markWiper = (e) => {
+        e.preventDefault();
+
+        setToggleSubmitModal(true);
+        setAnimateModal('animate__animated animate__backInRight flex flex-col items-center justify-center overflow-hidden');
+    }
+
+    const submitWiper = (e) => {
+        e.preventDefault();
+
+        let btnclasserror = 'btn btn-secondary mt-6';
+        let btnclasssuccess = 'btn btn-success mt-6';
+        let btnnote = "";
+
+        setStartLogin(true);
+
+        const handleBtn = (btnnote, btnclass) => {
+            setBtnNote(btnnote);
+            setBtnClass(btnclass);
+
+            setTimeout(() => {
+                setBtnNote("Submit");
+                setBtnClass('btn btn-success mt-6');
+            }, 3000);
+        }
+        // console.log(wiperData)
+        if (wiperData.attStatus === "") {
+            btnnote = "Mark Present or On leave";
+            handleBtn(btnnote, btnclasserror);
+            setStartLogin(false);
+            setTimeout(() => {
+                cancelWiper();
+            }, 3200);
+        }
+        else {
+            //now we run the submit code through the gps code
+            // console.log(wiperData);
+            const sendData = async (allData) => {
+                try {
+                    // const response = await axios.post(submitWiperData, JSON.stringify(wiperData));
+                    const response = await axios.post(submitWiperData, JSON.stringify(allData));
+                    // console.log(response.data);
+                    if (response.status === 200 && response.data.code === "sw321") {
+                        navigate("/Done");
+
+                        localStorage.removeItem("wiperPost");
+                        localStorage.removeItem("wiperStaff");
+                        localStorage.removeItem("wiperNum");
+                        localStorage.removeItem("wiperAtt");
+                    }
+                    else if (response.data.code === "sw311") {
+                        //this means user have submitted twice and trying to submit more
+                        navigate("/Multiple");
+                    }
+                    else {
+                        btnnote = response.data.msg;
+                        handleBtn(btnnote, btnclasserror);
+                    }
+                } catch (err) {
+                    btnnote = "Error processing!";
+                    handleBtn(btnnote, btnclasserror);
+                }
+
+                setStartLogin(false);
+            }
+
+            // sendData();
+
+            let locationData = {
+                lat: "",
+                long: ""
+            };
+
+            let allData = {
+                attendance: "",
+                location: ""
+            }
+
+            let locationPermit = "";
+
+            //!before you allow to send data, trigger location
+            if (navigator.geolocation) {
+                navigator.permissions.query({ name: "geolocation" })
+                .then((permission) => {
+                    // console.log(permission.state)
+                    if (permission.state === "granted") {
+                        // locationPermit = "granted";
+                        getLocation();
+                    } 
+                    else if (permission.state === "prompt") {
+                        // locationPermit = "prompt";
+                        getLocation();
+                    } 
+                    else {
+                        // Blocked
+                        // locationPermit = "blocked";
+                        //! COMMENT THE 3 LINES DIRECTLY BELOW OUT WHEN COMPLAINT IS HIGH
+                        btnnote = "Switch on your GPS & grant access";
+                        handleBtn(btnnote, btnclasserror);
+                        setStartLogin(false);
+                    }
+
+                });
+
+                const getLocation = () => {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            // Success!
+                            locationData = {
+                                lat: position.coords.latitude,
+                                long: position.coords.longitude
+                            }
+
+                            allData = {
+                                attendance: wiperData,
+                                location: locationData,
+                                attId: attId
+                            }
+                            // console.log(allData);
+                            sendData(allData);
+                        },
+                        (error) => {
+                            // User denied permission or other error
+                            // console.error("Error Code:", error.code, "Message:", error.message);
+
+                            //! COMMENT THE 3 LINES DIRECTLY BELOW OUT WHEN COMPLAINT IS HIGH
+                            btnnote = "Switch on your GPS";
+                            handleBtn(btnnote, btnclasserror);
+                            setStartLogin(false);
+
+                            locationData = {
+                                lat: "-",
+                                long: "-"
+                            }
+
+                            allData = {
+                                attendance: wiperData,
+                                location: locationData,
+                                attId: attId
+                            }
+
+                            // sendData(allData);//!IF USERS COMPLAIN SWITCH ON GPS TOO MUCH, UNCOMMENT THIS
+                        }
+                    );
+                }
+            } 
+            else {
+                //no browser support or other errors, therefore allow submission
+                locationData = {
+                    lat: "-",
+                    long: "-"
+                }
+
+                allData = {
+                    attendance: wiperData,
+                    location: locationData,
+                    attId: attId
+                }
+
+                sendData(allData);
+            }
+        }
+    }
+
+    const cancelWiper = () => {
+        setAnimateModal('animate__animated animate__backOutRight flex flex-col items-center justify-center overflow-hidden');
+        setTimeout(() => {
+            setToggleSubmitModal(false);
+        }, 600);
     }
 
   return (
@@ -353,6 +678,36 @@ const Form = () => {
         {toggleLoader === true ?
             <div className='fixed top-0 left-0 bg-white w-full h-screen z-1 flex items-center justify-center'>
                 <div className="loader"></div>
+            </div>
+        :
+            ""
+        }
+
+        {toggleSubmitModal == true ?
+            <div className='fixed w-full p-4 bg-white z-3 h-screen flex flex-col items-center justify-center'>
+                <section className={animateModal}>
+                    <p className='p-4'>
+                        Kindly note that your location data will be picked alongside
+                        your attendance status.
+                    </p>
+
+                    {startLogin == true ?
+                        <button className="btn btn-secondary mt-6">
+                            <span className="loading loading-spinner"></span>
+                            Pocessing...
+                        </button>
+                    :
+                        <section>
+                            <button onClick={submitWiper} className={btnClass}>
+                                {btnNote}
+                            </button>
+
+                            <button onClick={cancelWiper} className="btn btn-secondary mt-6 ml-5">
+                                Cancel
+                            </button>
+                        </section>
+                    }
+                </section>
             </div>
         :
             ""
@@ -378,12 +733,12 @@ const Form = () => {
                 }
             </section>
 
-            <section className='text-right mr-4 text-sm fixed top-0 left-0 mt-4 ml-28 z-2 bg-black p-2 rounded-md'>
+            {/* <section className='text-right mr-4 text-sm fixed top-0 left-0 mt-4 ml-28 z-2 bg-black p-2 rounded-md'>
                 <p>
                     <span className='text-white'>Number of Staff: </span>
                     <span className='bg-yellow-200 rounded-full px-2 py-1 text-black'>{staffNum}</span>
                 </p>
-            </section>
+            </section> */}
 
             {/* Transfer modal */}
             <dialog id="transfer_modal" className="modal">
@@ -562,28 +917,69 @@ const Form = () => {
                                             Submitted
                                         </button>
                                     :
-                                        <button className="btn btn-success mt-6">
-                                            Submit Attendance
-                                        </button>
+                                        startLogin === "noloc" ?
+                                            <button className="btn btn-error mt-6">
+                                                Switch on GPS and allow access
+                                            </button>
+                                        :
+                                            <button className="btn btn-success mt-6">
+                                                Submit Attendance
+                                            </button>
                         }
                     </div>
                 </form>
             :
-                toggleForm === "closed" ?
-                    <div className='shadow-sm p-10 py-20 rounded-sm font-semibold bg-gray-100 m-2 mt-10 flex items-center justify-center'>
-                        <p className='animate__animated animate__bounceIn'>
-                            Form closed for today!
-                        </p>
-                    </div>
+                toggleForm === "wiper" ?
+                    <form action="#" className='px-5' onSubmit={markWiper}>
+                        <div className="card bg-base-100 w-full shadow-sm border border-blue-100">
+                            <figure className="px-2 pt-3 w-30">
+                                <img
+                                src="/profile.jfif"
+                                alt="Profile"
+                                className="rounded-xl" />
+                            </figure>
+                            <div className="card-body items-center text-center">
+                                <h2 className="card-title">{staffName.replaceAll("  ", " ")}</h2>
+                                <p>Tick the appriopriate box below and select <b>Submit</b> to mark your attendance.</p>
+
+                                <div className="card-actions flex items-center justify-left text-sm mt-6">
+                                    <span className='text-green-600'>Present</span>
+                                    <input htmlFor="my_modal_6" type="checkbox" onChange={markAttendanceWiper} id="present" className="checkbox checkbox-success checkbox-lg mr-4" />
+
+                                    <span className='text-purple-600 ml-4'>On Leave </span>
+                                    <input type="checkbox" onChange={markAttendanceWiper} id="leave" className="checkbox checkbox-primary checkbox-lg" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className='pb-20 text-center mt-4 flex flex-col'>
+                            {/* <i className='text-red-600 text-left text-sm'>
+                                Note: You will be prompted to switch on your GPS before 
+                                submission.
+                            </i> */}
+                            <section>
+                                <button className="btn btn-success">
+                                    Mark Attendance
+                                </button>
+                            </section>
+                        </div>
+                    </form>
                 :
-                    toggleForm === "inactive" ?
+                    toggleForm === "closed" ?
                         <div className='shadow-sm p-10 py-20 rounded-sm font-semibold bg-gray-100 m-2 mt-10 flex items-center justify-center'>
                             <p className='animate__animated animate__bounceIn'>
-                                Check Back on Monday!
+                                Form closed for today!
                             </p>
                         </div>
                     :
-                        ""
+                        toggleForm === "inactive" ?
+                            <div className='shadow-sm p-10 py-20 rounded-sm font-semibold bg-gray-100 m-2 mt-10 flex items-center justify-center'>
+                                <p className='animate__animated animate__bounceIn'>
+                                    Check Back on Monday!
+                                </p>
+                            </div>
+                        :
+                            ""
             }
         </div>
         <Footer />

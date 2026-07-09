@@ -39,16 +39,12 @@ const Newschool = () => {
 
             // target 10:00 AM today
             const target = new Date();
-            target.setHours(10, 0, 0, 0);//when done, set thus: target.setHours(10, 0, 0, 0)
+            target.setHours(12, 0, 0, 0);//when done, set thus: target.setHours(10, 0, 0, 0)
 
             const distance = target - now;
 
             // Logic: Only run if it's Monday AND time is between 07:00:00 and 09:59:59
-            if (day !== 1) {// when done set thus: (day !== 1)
-                // setToggleLoader(false);
-                setToggleForm("inactive");
-            }
-            else if (day == 1 && hour >= 7 && hour < 10) {// when done set thus: (day == 1 && hour >= 7 && hour < 10)
+            if (day == 1 && hour >= 7 && hour < 12) {// when done set thus: (day == 1 && hour >= 7 && hour < 10)
                 const h = Math.floor(distance / (1000 * 60 * 60));
                 const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
                 const s = Math.floor((distance % (1000 * 60)) / 1000);
@@ -58,8 +54,13 @@ const Newschool = () => {
 
                 // setToggleLoader(false);
                 setToggleTimer("active");
-            } else {
+            } 
+            else if (day !== 1) {
                 // setToggleLoader(false);
+                setToggleForm("inactive");
+            }
+            else {
+                setToggleForm("closed");//! for testing, comment this out
                 setToggleTimer("closed");
             }
         }
@@ -263,9 +264,9 @@ const Newschool = () => {
             handleBtn(btnnote, btnclasserror);
         }
         else {
-            const sendData = async () => {
+            const sendData = async (allData) => {
                 try {
-                    const response = await axios.post(submitData, JSON.stringify(attendanceData));
+                    const response = await axios.post(submitData, JSON.stringify(allData));
                     // console.log(response.data);
                     if (response.status === 200 && response.data.code === "sw321") {
                         btnnote = "Submitted";
@@ -277,7 +278,76 @@ const Newschool = () => {
                     handleBtn(btnnote, btnclasserror);
                 }
             }
-            sendData();
+
+            let locationData = {
+                lat: "",
+                long: ""
+            };
+
+            let allData = {
+                attendance: "",
+                location: ""
+            }
+
+            //!before you allow to send data, trigger location
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        // Success!
+                        locationData = {
+                            lat: position.coords.latitude,
+                            long: position.coords.longitude
+                        }
+
+                        allData = {
+                            attendance: attendanceData,
+                            location: locationData
+                        }
+
+                        sendData(allData);
+                    },
+                    (error) => {
+                        // User denied permission or other error
+                        // console.error("Error Code:", error.code, "Message:", error.message);
+
+                        // btnnote = "Switch on GPS and allow access";//! COMMENT THIS OUT WHEN COMPLAINT IS HIGH
+                        // handleBtn(btnnote, btnclasserror);
+
+                        locationData = {
+                            lat: "-",
+                            long: "-"
+                        }
+
+                        allData = {
+                            attendance: attendanceData,
+                            location: locationData
+                        }
+
+                        sendData(allData);//!IF USERS COMPLAIN SWITCH ON GPS TOO MUCH, UNCOMMENT THIS
+                    },
+                    // {
+                    //     enableHighAccuracy: true,  // This forces the device to use GPS
+                    //     timeout: 10000,            // Wait up to 10 seconds for a precise lock
+                    //     maximumAge: 0   
+                    // }
+                );
+            } 
+            else {
+                //no browser support or other errors, therefore allow submission
+                locationData = {
+                    lat: "-",
+                    long: "-"
+                }
+
+                allData = {
+                    attendance: attendanceData,
+                    location: locationData
+                }
+
+                sendData(allData);
+            }
+
+            //sendData();
         }
     }
 
