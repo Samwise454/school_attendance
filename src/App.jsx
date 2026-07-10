@@ -15,6 +15,7 @@
     import Afternoon from './Afternoon';
     import Register from './Register';
     import Emisdata from './Emisdata';
+    import Trackemis from './Trackemis';
 
     function App() {
       return (
@@ -33,6 +34,7 @@
           <Route path="/register" element={<Register />} />
           <Route path="/footer" element={<Footer />} />
           <Route path="/emisdata" element={<Emisdata />} />
+          <Route path="/trackemis" element={<Trackemis />} />
         </Routes>
       );
     }

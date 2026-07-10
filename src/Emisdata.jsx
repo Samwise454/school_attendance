@@ -13,6 +13,7 @@ const Emisdata = () => {
     'Ogbaru', 'Onitsha North', 'Onitsha South', 'Orumba North', 
     'Orumba South', 'Oyi'
   ];
+  const processemisdata = "https://asubeb.esbatech.org/attendance/processemisdata.php";
 
   // State for form data
   const [formData, setFormData] = useState({
@@ -92,25 +93,21 @@ const Emisdata = () => {
     
     // console.log(formData);
 
-    if (!validateForm()) {
-      // Scroll to first error
-      const firstError = document.querySelector('.error-message');
-      if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      return;
-    }
+    // if (!validateForm()) {
+    //   // Scroll to first error
+    //   const firstError = document.querySelector('.error-message');
+    //   if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    //   return;
+    // }
 
-    setLoading(true);
-    setError('');
-    setSuccess('');
+    // setLoading(true);
+    // setError('');
+    // setSuccess('');
 
     try {
-      const response = await axios.post('processemisdata.php', formData, {
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
+      const response = await axios.post(processemisdata, formData);
 
-      if (response.data.success) {
+      if (response.status === 200) {
         setSuccess('School data submitted successfully!');
         // Reset form after successful submission
         const resetData = {
@@ -150,16 +147,21 @@ const Emisdata = () => {
         };
         setFormData(resetData);
         setFormErrors({});
+
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth", // 👈 this makes it gentle
+        });
         
         // setTimeout(() => {
         //   navigate('/dashboard');
         // }, 3000);
       } else {
-        setError(response.data.message || 'Submission failed');
+        setError(response.data.msg || 'Submission failed');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Error submitting data. Please try again.');
-      console.error('Submission error:', err);
+      setError(err.response?.data?.msg || 'Error submitting data. Please try again.');
+    //   console.error('Submission error:', err);
     } finally {
       setLoading(false);
     }
@@ -509,13 +511,13 @@ const Emisdata = () => {
 
             {/* Form Actions */}
             <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4 pt-6 border-t-2 border-gray-200">
-              <button
+              {/* <button
                 type="button"
                 onClick={() => navigate('/dashboard')}
                 className="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-200"
               >
                 Cancel
-              </button>
+              </button> */}
               <button
                 type="submit"
                 disabled={loading}
